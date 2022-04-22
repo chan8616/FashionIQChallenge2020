@@ -53,7 +53,7 @@ def main(args):
 
     # load model
     print(f'Load model: {args.expr_name}')
-    root_path = f'../train/repo/{args.expr_name}'
+    root_path = os.path.join(args.test_root, 'repo', args.expr_name)
     with open(os.path.join(root_path, 'args.json'), 'r') as f:
         largs = json.load(f)
         largs = easydict.EasyDict(largs)
@@ -69,7 +69,8 @@ def main(args):
                               fdims=largs.fdims,
                               fc_arch='A',
                               init_with_glove=False,
-                              loss_type=largs.loss_type)
+                              #loss_type=largs.loss_type
+                              )
     elif largs.method == 'tirg':
         from src.model.tirg import TIRG
         model = TIRG(
@@ -80,7 +81,7 @@ def main(args):
             fdims=largs.fdims,
             fc_arch='B',
             init_with_glove=True,
-            loss_type=largs.loss_type,
+            #loss_type=largs.loss_type,
         )
     elif largs.method == 'match-tirg':
         from src.model.match import MatchTIRG
@@ -92,7 +93,7 @@ def main(args):
             fdims=largs.fdims,
             fc_arch='B',
             init_with_glove=True,
-            loss_type=largs.loss_type,
+            #loss_type=largs.loss_type,
         )
     elif largs.method == 'match-text-only':
         from src.model.match import MatchTextOnly
@@ -102,7 +103,8 @@ def main(args):
                               fdims=largs.fdims,
                               fc_arch='A',
                               init_with_glove=False,
-                              loss_type=largs.loss_type)
+                              #loss_type=largs.loss_type
+                              )
             
     model.load(os.path.join(root_path, 'best_model.pth'))
     model = model.cuda()
@@ -118,6 +120,7 @@ def main(args):
             # train/val data loader
             from src.dataset import FashionIQTestDataset
             test_dataset = FashionIQTestDataset(
+                test_root = args.test_root,
                 data_root=args.data_root,
                 image_size=image_size,
                 split=SPLIT,
@@ -214,8 +217,9 @@ if __name__ == "__main__":
     # Common options.
     parser.add_argument('--gpu_id', default='0', type=str, help='id(s) for CUDA_VISIBLE_DEVICES')
     parser.add_argument('--manualSeed', type=int, default=int(time.time()), help='manual seed')
-    parser.add_argument('--data_root', required=True, type=str, help='experiment name')
-    parser.add_argument('--expr_name', default='tirg', type=str, help='experiment name')
+    parser.add_argument('--data_root', required=True, type=str, default='/home/piai/chan/largescale_multimedia/project/FashionIQChallenge2020/data', help='data root directory path')
+    parser.add_argument('--test_root', required=True, type=str, default = '/home/piai/chan/largescale_multimedia/project/FashionIQChallenge2020/ours/train')
+    parser.add_argument('--expr_name', default='devel', type=str, help='experiment name')
     
     ## parse and save args.
     args, _ = parser.parse_known_args()

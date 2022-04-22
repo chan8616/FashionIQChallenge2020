@@ -153,7 +153,7 @@ if __name__ == '__main__':
     parser.add_argument('--target', default='all', type=str, help='target (dress | shirt | toptee)')
     parser.add_argument('--epochs', default=100, type=int)
     parser.add_argument('--print_freq', default=1, type=int)
-    parser.add_argument('--batch_size', default=32, type=int, help='train batchsize')
+    parser.add_argument('--batch_size', default=8, type=int, help='train batchsize')
     parser.add_argument('--image_size', default=224, type=int, help='image size (default: 16)')
     parser.add_argument('--backbone', default='resnet152', type=str)
     parser.add_argument('--normalize_scale', default=5.0, type=float)
