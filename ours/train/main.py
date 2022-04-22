@@ -53,6 +53,7 @@ def main():
     test_loader = dict()
     for target in targets:
         test_dataset = FashionIQTestDataset(
+            test_root=args.test_root,
             data_root=args.data_root,
             image_size=args.image_size,
             split='val',
@@ -161,6 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--lrp', default=0.48, type=float, help='lrp')
     parser.add_argument('--lr_decay_factor', default=0.4747, type=float)
     parser.add_argument('--lr_decay_steps', default="10,20,30,40,50,60,70", type=str)
+    parser.add_argument('--test_root', required=True, type=str, help='directory where ')
 
     ## parse and save args.
     args, _ = parser.parse_known_args()
