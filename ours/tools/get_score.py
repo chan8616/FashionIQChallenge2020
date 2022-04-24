@@ -160,6 +160,8 @@ def main(args):
                 input[1] = (x_t, c_t, data['t_id'])
                 input[2] = (we, w_key, text)
                 """
+                #print('img size:', input[0][0].shape)
+                #print('caption size:', input[2][0].shape)
                 input[0][0] = Variable(input[0][0].cuda())
                 input[2][0] = Variable(input[2][0].cuda())
                 

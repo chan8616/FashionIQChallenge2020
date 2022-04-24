@@ -63,7 +63,7 @@ class SimpleVocab(object):
 
 
 class Word2Vec(nn.Module):
-    def __init__(self, vocab, embed_size, init_with_glove=False):
+    def __init__(self, vocab, embed_size, root, init_with_glove=False):
         super(Word2Vec, self).__init__()
         vocab_size = vocab.get_size() 
 
@@ -74,7 +74,7 @@ class Word2Vec(nn.Module):
             import urllib.request
             from tqdm import tqdm
             print(f'Initialize Word2Vec with GloVe vectors...')
-            word2vec_path = 'assets/word2vec'
+            word2vec_path = os.path.join(root, 'assets/word2vec')
             with open(os.path.join(word2vec_path, 'glove_840B_300d/embeddings.pkl'), 'rb') as f:
                 self.word2vec_a = pickle.load(f)
             with open(os.path.join(word2vec_path, 'glove_42B_300d/embeddings.pkl'), 'rb') as f:
@@ -134,7 +134,9 @@ class TextLSTMModel(nn.Module):
                  texts_to_build_vocab,
                  word_embed_dim,
                  lstm_hidden_dim,
+                 test_root,
                  init_with_glove):
+        self.test_root = test_root
         super(TextLSTMModel, self).__init__()
 
         self.vocab = SimpleVocab()
@@ -144,7 +146,7 @@ class TextLSTMModel(nn.Module):
                                                
         self.word_embed_dim = word_embed_dim   
         self.lstm_hidden_dim = lstm_hidden_dim 
-        self.embedding_layer = Word2Vec(self.vocab, word_embed_dim, init_with_glove=init_with_glove)
+        self.embedding_layer = Word2Vec(self.vocab, word_embed_dim, self.test_root, init_with_glove=init_with_glove)
                                                
         self.num_layers = 2                    
         self.lstm = torch.nn.LSTM(word_embed_dim, lstm_hidden_dim,
@@ -210,9 +212,10 @@ class TextLSTMGRUModel(nn.Module):
                  texts_to_build_vocab,
                  word_embed_dim,
                  hidden_dim,
+                 test_root,
                  init_with_glove):
         super(TextLSTMGRUModel, self).__init__()
-
+        self.test_root = test_root
         self.vocab = SimpleVocab()
         for text in tqdm(texts_to_build_vocab):
             self.vocab.add_text_to_vocab(text) 
@@ -220,7 +223,7 @@ class TextLSTMGRUModel(nn.Module):
                                                
         self.word_embed_dim = word_embed_dim   
         self.hidden_dim = hidden_dim 
-        self.embedding_layer = Word2Vec(self.vocab, word_embed_dim, init_with_glove=init_with_glove)
+        self.embedding_layer = Word2Vec(self.vocab, word_embed_dim, self.test_root, init_with_glove=init_with_glove)
                                     
         # 2-layer LSTM.
         self.num_layers = 2                    
@@ -298,9 +301,9 @@ class ImageEncoderTextEncoderBase(nn.Module):
     """Base class for image and text encoder.
     """
 
-    def __init__(self, backbone, texts, text_method, fdims, init_with_glove, fc_arch):
+    def __init__(self, backbone, texts, text_method, fdims, init_with_glove, fc_arch, test_root):
         super(ImageEncoderTextEncoderBase, self).__init__()
-
+        self.test_root = test_root
         self.in_feature_image = None
         self.out_feature_image = fdims
         self.in_feature_text = 3 * 300
@@ -327,7 +330,8 @@ class ImageEncoderTextEncoderBase(nn.Module):
 
         # define image/text models.
         self.model = dict()
-        self.model['backbone'] = self.backbone
+        # 이거!! resnet152 -> image encoder는 backbone에서 나온 결과를 fc에 통과시킨것
+        self.model['backbone'] = self.backbone     
         self.model['image_encoder'] = nn.Sequential(
             nn.Linear(self.in_feature_image, self.out_feature_image)
         )
@@ -340,12 +344,14 @@ class ImageEncoderTextEncoderBase(nn.Module):
                 lstm_hidden_dim=self.out_feature_text,
                 init_with_glove=init_with_glove,
             )
-        elif text_method == 'lstm-gru':
+        # TEXT ENCODER는 이거!!!
+        elif text_method == 'lstm-gru':        
             self.model['text_encoder'] = TextLSTMGRUModel(
                 fc_arch=fc_arch,
                 texts_to_build_vocab=texts,
                 word_embed_dim=self.in_feature_text,
                 hidden_dim=self.out_feature_text,
+                test_root= self.test_root,
                 init_with_glove=init_with_glove,
             )
         elif text_method == 'swem':             # swem: concatenation of mean & max pool of glove vector (300-d + 300-d = 600-d)
@@ -358,6 +364,7 @@ class ImageEncoderTextEncoderBase(nn.Module):
             )
 
     def extract_image_feature(self, x):
+        print(x.shape)
         x = self.model['backbone'](x)
         x = self.model['image_encoder'](x)
         return x

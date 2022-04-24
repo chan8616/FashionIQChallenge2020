@@ -42,19 +42,19 @@ class TIRG(ImageEncoderTextEncoderBase):
         self.model['gated_feature_composer'] = torch.nn.Sequential(
             ConCatModule(),
             nn.BatchNorm1d(self.out_feature_image + self.out_feature_text),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.out_feature_image + self.out_feature_text, self.out_feature_image + self.out_feature_text),
             nn.BatchNorm1d(self.out_feature_image + self.out_feature_text),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.out_feature_image + self.out_feature_text, self.out_feature_image),
         )
 
         self.model['res_info_composer'] = torch.nn.Sequential(
             ConCatModule(),
             nn.BatchNorm1d(self.out_feature_image + self.out_feature_text),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.out_feature_image + self.out_feature_text, self.out_feature_image + self.out_feature_text),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.out_feature_image + self.out_feature_text, self.out_feature_image),
         )
         self.model = nn.ModuleDict(self.model)
